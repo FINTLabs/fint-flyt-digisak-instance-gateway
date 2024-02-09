@@ -1,0 +1,9 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: NamOAuthClientApplicationResource
+metadata:
+  name: fint-flyt-digisak-oauth2-client
+spec:
+  clientIdProperty: fint.flyt.digisak.sso.client-id
+  clientSecretProperty: fint.flyt.digisak.sso.client-secret
+  grantTypes:
+    - client_credentials

@@ -20,12 +20,12 @@ jar {
 }
 
 repositories {
-    mavenCentral()
     repositories {
         maven {
             url "https://repo.fintlabs.no/releases"
         }
     }
+    mavenCentral()
     mavenLocal()
 }
 
