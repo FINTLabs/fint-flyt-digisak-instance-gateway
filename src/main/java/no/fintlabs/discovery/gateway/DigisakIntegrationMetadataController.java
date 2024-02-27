@@ -2,6 +2,8 @@ package no.fintlabs.discovery.gateway;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.discovery.gateway.model.digisak.SubsidyDefinition;
+import no.fintlabs.discovery.gateway.model.fint.InstanceMetadataContent;
+import no.fintlabs.discovery.gateway.model.fint.InstanceValueMetadata;
 import no.fintlabs.discovery.gateway.model.fint.IntegrationMetadata;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
+
+import java.util.stream.Collectors;
 
 import static no.fintlabs.resourceserver.UrlPaths.EXTERNAL_API;
 
@@ -45,6 +49,14 @@ public class DigisakIntegrationMetadataController {
                 .sourceApplicationIntegrationId(subsidyDefinition.getMetadata().getSubsidyId())
                 .integrationDisplayName(subsidyDefinition.getMetadata().getSubsidyDisplayName())
                 .version(subsidyDefinition.getMetadata().getVersion())
+                .instanceMetadata(InstanceMetadataContent.builder()
+                        .instanceValueMetadata(
+                                subsidyDefinition.getFields().stream().map(subsidyField -> InstanceValueMetadata.builder()
+                                        .key(subsidyField.getName())
+                                        .displayName(subsidyField.getDisplayName())
+                                        .type(InstanceValueMetadata.Type.STRING).build()
+                        ).collect(Collectors.toList()))
+                        .build())
                 .build();
 
         integrationMetadataProducerService.publishNewIntergationMetadata(integrationMetadata);
