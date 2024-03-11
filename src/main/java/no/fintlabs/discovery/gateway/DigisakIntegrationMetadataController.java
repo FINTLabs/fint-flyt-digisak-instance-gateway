@@ -30,7 +30,8 @@ public class DigisakIntegrationMetadataController {
     private final DigisakSubsidyDefinitionValidator digisakSubsidyDefinitionValidator;
 
     public DigisakIntegrationMetadataController(IntegrationMetadataProducerService integrationMetadataProducerService,
-                                                SourceApplicationAuthorizationUtil sourceApplicationAuthorizationUtil, DigisakSubsidyDefinitionValidator digisakSubsidyDefinitionValidator) {
+                                                SourceApplicationAuthorizationUtil sourceApplicationAuthorizationUtil,
+                                                DigisakSubsidyDefinitionValidator digisakSubsidyDefinitionValidator) {
         this.integrationMetadataProducerService = integrationMetadataProducerService;
         this.sourceApplicationAuthorizationUtil = sourceApplicationAuthorizationUtil;
         this.digisakSubsidyDefinitionValidator = digisakSubsidyDefinitionValidator;
@@ -62,48 +63,57 @@ public class DigisakIntegrationMetadataController {
                 .integrationDisplayName(subsidyDefinition.getIntegrationDisplayName())
                 .version(subsidyDefinition.getVersion())
                 .instanceMetadata(InstanceMetadataContent.builder()
-                        .instanceValueMetadata(
-                                subsidyDefinition.getFieldDefinitions().stream()
-                                        .map(subsidyField -> InstanceValueMetadata.builder()
-                                            .key(subsidyField.getId())
-                                            .displayName(subsidyField.getDisplayName())
-                                            .type(InstanceValueMetadata.Type.STRING).build())
-                                        .collect(Collectors.toList()))
-                        .instanceMetadataCategories(
-                                subsidyDefinition.getGroupDefinitions().stream()
-                                        .map(subsidyGroupDefinition -> InstanceMetadataCategory.builder()
-                                                .displayName(subsidyGroupDefinition.getDisplayName())
-                                                .instanceMetadataContent(InstanceMetadataContent.builder()
-                                                        .instanceValueMetadata(
-                                                                subsidyGroupDefinition.getFieldDefinitions().stream()
-                                                                        .map(subsidyField -> InstanceValueMetadata.builder()
-                                                                                .key(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
-                                                                                .displayName(subsidyField.getDisplayName())
-                                                                                .type(InstanceValueMetadata.Type.STRING).build())
-                                                                        .collect(Collectors.toList()))
-                                                        .build())
-                                                .build())
-                                        .collect(Collectors.toList()))
-                        .instanceObjectCollectionMetadata(
-                                subsidyDefinition.getCollectionDefinitions().stream()
-                                        .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
-                                                .key(subsidyCollectionDefinition.getId())
-                                                .displayName(subsidyCollectionDefinition.getDisplayName())
-                                                .instanceMetadataContent(InstanceMetadataContent.builder()
-                                                        .instanceValueMetadata(
-                                                                subsidyCollectionDefinition.getFieldDefinitions().stream()
-                                                                        .map(subsidyField -> InstanceValueMetadata.builder()
-                                                                                .key(subsidyCollectionDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
-                                                                                .displayName(subsidyField.getDisplayName())
-                                                                                .type(InstanceValueMetadata.Type.STRING).build())
-                                                                        .collect(Collectors.toList()))
-                                                        .build())
-                                                .build())
-                                        .collect(Collectors.toList()))
+                        .instanceValueMetadata(getInstanceValueMetadata(subsidyDefinition))
+                        .instanceMetadataCategories(getInstanceMetadataCategories(subsidyDefinition))
+                        .instanceObjectCollectionMetadata(getInstanceObjectCollectionMetadata(subsidyDefinition))
                         .build())
                 .build();
 
         integrationMetadataProducerService.publishNewIntegrationMetadata(integrationMetadata);
         return ResponseEntity.accepted().build();
+    }
+
+    private static List<InstanceObjectCollectionMetadata> getInstanceObjectCollectionMetadata(SubsidyDefinition subsidyDefinition) {
+        return subsidyDefinition.getCollectionDefinitions().stream()
+                .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
+                        .key(subsidyCollectionDefinition.getId())
+                        .displayName(subsidyCollectionDefinition.getDisplayName())
+                        .instanceMetadataContent(InstanceMetadataContent.builder()
+                                .instanceValueMetadata(
+                                        subsidyCollectionDefinition.getFieldDefinitions().stream()
+                                                .map(subsidyField -> InstanceValueMetadata.builder()
+                                                        .key(subsidyCollectionDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
+                                                        .displayName(subsidyField.getDisplayName())
+                                                        .type(InstanceValueMetadata.Type.STRING).build())
+                                                .collect(Collectors.toList()))
+                                .build())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private static List<InstanceMetadataCategory> getInstanceMetadataCategories(SubsidyDefinition subsidyDefinition) {
+        return subsidyDefinition.getGroupDefinitions().stream()
+                .map(subsidyGroupDefinition -> InstanceMetadataCategory.builder()
+                        .displayName(subsidyGroupDefinition.getDisplayName())
+                        .instanceMetadataContent(InstanceMetadataContent.builder()
+                                .instanceValueMetadata(
+                                        subsidyGroupDefinition.getFieldDefinitions().stream()
+                                                .map(subsidyField -> InstanceValueMetadata.builder()
+                                                        .key(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
+                                                        .displayName(subsidyField.getDisplayName())
+                                                        .type(InstanceValueMetadata.Type.STRING).build())
+                                                .collect(Collectors.toList()))
+                                .build())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private static List<InstanceValueMetadata> getInstanceValueMetadata(SubsidyDefinition subsidyDefinition) {
+        return subsidyDefinition.getFieldDefinitions().stream()
+                .map(subsidyField -> InstanceValueMetadata.builder()
+                        .key(subsidyField.getId())
+                        .displayName(subsidyField.getDisplayName())
+                        .type(InstanceValueMetadata.Type.STRING).build())
+                .collect(Collectors.toList());
     }
 }
