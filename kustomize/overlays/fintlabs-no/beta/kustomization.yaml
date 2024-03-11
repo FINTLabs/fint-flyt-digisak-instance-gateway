@@ -19,10 +19,10 @@ patches:
         value: "fintlabs.no"
       - op: add
         path: "/spec/url/basePath"
-        value: "/beta"
+        value: "/beta/fintlabs-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/beta/api/digisak/instances/999999999"
+        value: "/beta/fintlabs-no/api/digisak/metadata"
     target:
       kind: Application
       name: fint-flyt-digisak-gateway
