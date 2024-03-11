@@ -2,13 +2,12 @@ package no.fintlabs.discovery.gateway;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.discovery.gateway.model.digisak.SubsidyDefinition;
-import no.fintlabs.discovery.gateway.model.fint.InstanceMetadataContent;
-import no.fintlabs.discovery.gateway.model.fint.InstanceValueMetadata;
-import no.fintlabs.discovery.gateway.model.fint.IntegrationMetadata;
+import no.fintlabs.discovery.gateway.model.fint.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,11 +63,43 @@ public class DigisakIntegrationMetadataController {
                 .version(subsidyDefinition.getVersion())
                 .instanceMetadata(InstanceMetadataContent.builder()
                         .instanceValueMetadata(
-                                subsidyDefinition.getFieldDefinitions().stream().map(subsidyField -> InstanceValueMetadata.builder()
-                                        .key(subsidyField.getId())
-                                        .displayName(subsidyField.getDisplayName())
-                                        .type(InstanceValueMetadata.Type.STRING).build()
-                        ).collect(Collectors.toList()))
+                                subsidyDefinition.getFieldDefinitions().stream()
+                                        .map(subsidyField -> InstanceValueMetadata.builder()
+                                            .key(subsidyField.getId())
+                                            .displayName(subsidyField.getDisplayName())
+                                            .type(InstanceValueMetadata.Type.STRING).build())
+                                        .collect(Collectors.toList()))
+                        .instanceMetadataCategories(
+                                subsidyDefinition.getGroupDefinitions().stream()
+                                        .map(subsidyGroupDefinition -> InstanceMetadataCategory.builder()
+                                                .displayName(subsidyGroupDefinition.getDisplayName())
+                                                .instanceMetadataContent(InstanceMetadataContent.builder()
+                                                        .instanceValueMetadata(
+                                                                subsidyGroupDefinition.getFieldDefinitions().stream()
+                                                                        .map(subsidyField -> InstanceValueMetadata.builder()
+                                                                                .key(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
+                                                                                .displayName(subsidyField.getDisplayName())
+                                                                                .type(InstanceValueMetadata.Type.STRING).build())
+                                                                        .collect(Collectors.toList()))
+                                                        .build())
+                                                .build())
+                                        .collect(Collectors.toList()))
+                        .instanceObjectCollectionMetadata(
+                                subsidyDefinition.getCollectionDefinitions().stream()
+                                        .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
+                                                .key(subsidyCollectionDefinition.getId())
+                                                .displayName(subsidyCollectionDefinition.getDisplayName())
+                                                .instanceMetadataContent(InstanceMetadataContent.builder()
+                                                        .instanceValueMetadata(
+                                                                subsidyCollectionDefinition.getFieldDefinitions().stream()
+                                                                        .map(subsidyField -> InstanceValueMetadata.builder()
+                                                                                .key(subsidyCollectionDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
+                                                                                .displayName(subsidyField.getDisplayName())
+                                                                                .type(InstanceValueMetadata.Type.STRING).build())
+                                                                        .collect(Collectors.toList()))
+                                                        .build())
+                                                .build())
+                                        .collect(Collectors.toList()))
                         .build())
                 .build();
 
