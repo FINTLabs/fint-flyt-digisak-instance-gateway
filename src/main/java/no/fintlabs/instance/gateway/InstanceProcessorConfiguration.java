@@ -17,7 +17,7 @@ public class InstanceProcessorConfiguration {
             SubsidyInstanceMappingService subsidyInstanceMappingService) {
 
         return instanceProcessorFactoryService.createInstanceProcessor(
-                "instance",
+                "3",
                 incomingInstance -> Optional.of(incomingInstance.getIntegrationId()),
                 subsidyInstanceMappingService
         );
