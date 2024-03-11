@@ -14,21 +14,14 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubsidyDefinition {
+public class SubsidyCollectionDefinition {
 
     @NotBlank
-    private String integrationId;
+    private String id;
 
     @NotBlank
-    private String integrationDisplayName;
-
-    @NotNull
-    private Long version;
+    private String displayName;
 
     @NotEmpty
     private List<@NotNull SubsidyFieldDefinition> fieldDefinitions;
-
-    private List<@NotNull SubsidyGroupDefinition> groupDefinitions;
-
-    private List<@NotNull SubsidyCollectionDefinition> collectionDefinitions;
 }

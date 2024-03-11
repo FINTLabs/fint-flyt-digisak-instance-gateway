@@ -11,10 +11,10 @@ import javax.validation.constraints.NotBlank;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubsidyField {
+public class SubsidyFieldDefinition {
 
     @NotBlank
-    private String name;
+    private String id;
 
     @NotBlank
     private String displayName;

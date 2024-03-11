@@ -20,7 +20,7 @@ public class IntegrationMetadataProducerService {
                 .build();
     }
 
-    public void publishNewIntergationMetadata(IntegrationMetadata integrationMetadata) {
+    public void publishNewIntegrationMetadata(IntegrationMetadata integrationMetadata) {
         integrationMetadataEventProducer.send(
                 EventProducerRecord.<IntegrationMetadata>builder()
                         .topicNameParameters(eventTopicNameParameters)
