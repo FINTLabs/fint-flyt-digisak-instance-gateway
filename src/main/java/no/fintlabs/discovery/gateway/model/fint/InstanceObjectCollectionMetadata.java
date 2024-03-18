@@ -10,6 +10,6 @@ import lombok.Getter;
 public class InstanceObjectCollectionMetadata {
 
     private final String displayName;
-    private final InstanceMetadataContent instanceMetadataContent;
+    private final InstanceMetadataContent objectMetadata;
     private final String key;
 }

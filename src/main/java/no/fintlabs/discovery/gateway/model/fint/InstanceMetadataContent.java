@@ -19,5 +19,5 @@ public class InstanceMetadataContent {
     private final Collection<InstanceObjectCollectionMetadata> instanceObjectCollectionMetadata = new ArrayList<>();
 
     @Builder.Default
-    private final Collection<InstanceMetadataCategory> instanceMetadataCategories = new ArrayList<>();
+    private final Collection<InstanceMetadataCategory> categories = new ArrayList<>();
 }

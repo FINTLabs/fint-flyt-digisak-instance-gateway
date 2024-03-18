@@ -64,7 +64,7 @@ public class DigisakIntegrationMetadataController {
                 .version(subsidyDefinition.getVersion())
                 .instanceMetadata(InstanceMetadataContent.builder()
                         .instanceValueMetadata(getInstanceValueMetadata(subsidyDefinition))
-                        .instanceMetadataCategories(getInstanceMetadataCategories(subsidyDefinition))
+                        .categories(getInstanceMetadataCategories(subsidyDefinition))
                         .instanceObjectCollectionMetadata(getInstanceObjectCollectionMetadata(subsidyDefinition))
                         .build())
                 .build();
@@ -78,7 +78,7 @@ public class DigisakIntegrationMetadataController {
                 .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
                         .key(subsidyCollectionDefinition.getId())
                         .displayName(subsidyCollectionDefinition.getDisplayName())
-                        .instanceMetadataContent(InstanceMetadataContent.builder()
+                        .objectMetadata(InstanceMetadataContent.builder()
                                 .instanceValueMetadata(
                                         subsidyCollectionDefinition.getFieldDefinitions().stream()
                                                 .map(subsidyField -> InstanceValueMetadata.builder()
@@ -95,7 +95,7 @@ public class DigisakIntegrationMetadataController {
         return subsidyDefinition.getGroupDefinitions().stream()
                 .map(subsidyGroupDefinition -> InstanceMetadataCategory.builder()
                         .displayName(subsidyGroupDefinition.getDisplayName())
-                        .instanceMetadataContent(InstanceMetadataContent.builder()
+                        .content(InstanceMetadataContent.builder()
                                 .instanceValueMetadata(
                                         subsidyGroupDefinition.getFieldDefinitions().stream()
                                                 .map(subsidyField -> InstanceValueMetadata.builder()

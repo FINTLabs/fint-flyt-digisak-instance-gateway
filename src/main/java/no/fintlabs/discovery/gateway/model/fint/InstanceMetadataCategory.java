@@ -10,5 +10,5 @@ import lombok.Getter;
 public class InstanceMetadataCategory {
 
     private final String displayName;
-    private final InstanceMetadataContent instanceMetadataContent;
+    private final InstanceMetadataContent content;
 }
