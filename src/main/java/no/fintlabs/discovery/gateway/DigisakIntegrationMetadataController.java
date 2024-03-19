@@ -82,7 +82,7 @@ public class DigisakIntegrationMetadataController {
                                 .instanceValueMetadata(
                                         subsidyCollectionDefinition.getFieldDefinitions().stream()
                                                 .map(subsidyField -> InstanceValueMetadata.builder()
-                                                        .key(subsidyCollectionDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
+                                                        .key(subsidyField.getId())
                                                         .displayName(subsidyField.getDisplayName())
                                                         .type(InstanceValueMetadata.Type.STRING).build())
                                                 .collect(Collectors.toList()))
