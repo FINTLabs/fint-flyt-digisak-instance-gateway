@@ -2,6 +2,7 @@ package no.fintlabs.discovery.gateway;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.discovery.gateway.model.digisak.SubsidyDefinition;
+import no.fintlabs.discovery.gateway.model.digisak.SubsidyFieldDefinition;
 import no.fintlabs.discovery.gateway.model.fint.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +85,7 @@ public class DigisakIntegrationMetadataController {
                                                 .map(subsidyField -> InstanceValueMetadata.builder()
                                                         .key(subsidyField.getId())
                                                         .displayName(subsidyField.getDisplayName())
-                                                        .type("FILE".equals(subsidyField.getType()) ? InstanceValueMetadata.Type.FILE : InstanceValueMetadata.Type.STRING).build())
+                                                        .type(getType(subsidyField)).build())
                                                 .collect(Collectors.toList()))
                                 .build())
                         .build())
@@ -101,7 +102,7 @@ public class DigisakIntegrationMetadataController {
                                                 .map(subsidyField -> InstanceValueMetadata.builder()
                                                         .key(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
                                                         .displayName(subsidyField.getDisplayName())
-                                                        .type(InstanceValueMetadata.Type.STRING).build())
+                                                        .type(getType(subsidyField)).build())
                                                 .collect(Collectors.toList()))
                                 .build())
                         .build())
@@ -113,7 +114,12 @@ public class DigisakIntegrationMetadataController {
                 .map(subsidyField -> InstanceValueMetadata.builder()
                         .key(subsidyField.getId())
                         .displayName(subsidyField.getDisplayName())
-                        .type(InstanceValueMetadata.Type.STRING).build())
+                        .type(getType(subsidyField)).build())
                 .collect(Collectors.toList());
     }
+
+    private static InstanceValueMetadata.Type getType(SubsidyFieldDefinition subsidyField) {
+        return "FILE".equals(subsidyField.getType()) ? InstanceValueMetadata.Type.FILE : InstanceValueMetadata.Type.STRING;
+    }
+
 }
