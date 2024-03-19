@@ -84,7 +84,7 @@ public class DigisakIntegrationMetadataController {
                                                 .map(subsidyField -> InstanceValueMetadata.builder()
                                                         .key(subsidyField.getId())
                                                         .displayName(subsidyField.getDisplayName())
-                                                        .type(InstanceValueMetadata.Type.STRING).build())
+                                                        .type("FILE".equals(subsidyField.getType()) ? InstanceValueMetadata.Type.FILE : InstanceValueMetadata.Type.STRING).build())
                                                 .collect(Collectors.toList()))
                                 .build())
                         .build())

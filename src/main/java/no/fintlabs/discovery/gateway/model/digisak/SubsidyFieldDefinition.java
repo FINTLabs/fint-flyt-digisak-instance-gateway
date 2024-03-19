@@ -18,4 +18,6 @@ public class SubsidyFieldDefinition {
 
     @NotBlank
     private String displayName;
+
+    private String type;
 }
