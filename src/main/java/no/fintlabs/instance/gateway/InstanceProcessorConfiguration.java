@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Configuration
 public class InstanceProcessorConfiguration {
@@ -19,7 +18,7 @@ public class InstanceProcessorConfiguration {
 
         return instanceProcessorFactoryService.createInstanceProcessor(
                 incomingInstance -> Optional.of(incomingInstance.getIntegrationId()),
-                incomingInstance -> Optional.of(String.valueOf(UUID.randomUUID())),
+                incomingInstance -> Optional.of(incomingInstance.getInstanceId()),
                 subsidyInstanceMappingService
         );
     }

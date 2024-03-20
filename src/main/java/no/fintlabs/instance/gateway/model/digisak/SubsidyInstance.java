@@ -18,6 +18,8 @@ public class SubsidyInstance {
     @NotNull
     private String integrationId;
 
+    private String instanceId;
+
     @NotNull
     private Map<String, String> fields;
 
