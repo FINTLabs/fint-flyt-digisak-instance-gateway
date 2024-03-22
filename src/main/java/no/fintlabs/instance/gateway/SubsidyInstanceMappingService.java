@@ -9,13 +9,13 @@ import no.fintlabs.instance.gateway.model.digisak.SubsidyInstance;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -29,54 +29,70 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
 
     @Override
     public Mono<InstanceObject> map(Long sourceApplicationId, SubsidyInstance subsidyInstance) {
-
-        return Mono.just(
+        return Mono.zip(
+                fieldValueMapper(subsidyInstance),
+                groupValueMapper(subsidyInstance, sourceApplicationId),
+                collectionValueMapper(subsidyInstance, sourceApplicationId)
+            ).map(collectionValue ->
                 InstanceObject.builder()
-                        .valuePerKey(Stream
-                                .concat(subsidyInstance.getFields().entrySet().stream(),
-                                        groupValueMapper(subsidyInstance, sourceApplicationId, subsidyInstance))
-                                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
-                        .objectCollectionPerKey(collectionValueMapper(subsidyInstance))
-                        .build());
+                                .valuePerKey(getCombineValuePerKey(collectionValue.getT1(), collectionValue.getT2()))
+                                .objectCollectionPerKey(collectionValue.getT3())
+                                .build());
     }
 
-    private Map<String, Collection<InstanceObject>> collectionValueMapper(SubsidyInstance instance) {
-
-        return instance.getCollections().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        collectionFields -> collectionFields.getValue().stream()
-                                .map(this::toInstanceObject).collect(Collectors.toList())));
+    private Map<String, String> getCombineValuePerKey(Map<String, String> fieldValueMap, Map<String, String> groupValueMap) {
+        Map<String, String> concatinatedMap = new HashMap<>();
+        concatinatedMap.putAll(fieldValueMap);
+        concatinatedMap.putAll(groupValueMap);
+        return concatinatedMap;
     }
 
-    private Stream<Map.Entry<String, String>> groupValueMapper(SubsidyInstance instance, Long sourceApplicationId, SubsidyInstance subsidyInstance) {
-
-        return instance.getGroups().entrySet().stream()
-                .flatMap(group -> group.getValue().entrySet().stream()
-                        .map(field -> getEntry(group, field, sourceApplicationId, subsidyInstance)));
+    private Mono<Map<String, String>> fieldValueMapper(SubsidyInstance subsidyInstance) {
+        return Flux.fromIterable(subsidyInstance.getFields().entrySet())
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private Map.Entry<String, String> getEntry(Map.Entry<String, Map<String, String>> group, Map.Entry<String, String> field, Long sourceApplicationId, SubsidyInstance subsidyInstance) {
+    private Mono<Map<String, Collection<InstanceObject>>> collectionValueMapper(SubsidyInstance instance, Long sourceApplicationId) {
+        return Flux.fromIterable(instance.getCollections().entrySet())
+                .flatMap(entry -> Flux.fromIterable(entry.getValue())
+                        .flatMap(collectionMap -> Flux.fromIterable(collectionMap.entrySet())
+                                .flatMap(field -> Mono.from(getEntry(field, sourceApplicationId, instance.getInstanceId()))
+                                        .map(uuid -> Map.entry(field.getKey(), uuid))
+                                )
+                                .collectMap(Map.Entry::getKey, Map.Entry::getValue))
+                        .map(this::toInstanceObject)
+                        .collectList()
+                        .map(list -> Map.entry(entry.getKey(), list)))
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
+
+    private Mono<Map<String, String>> groupValueMapper(SubsidyInstance instance, Long sourceApplicationId) {
+        return Flux.fromIterable(instance.getGroups().entrySet())
+                .flatMap(group -> Flux.fromIterable(group.getValue().entrySet())
+                        .flatMap(field -> Mono.from(getEntry(field, sourceApplicationId, instance.getInstanceId()))
+                                .map(uuid -> Map.entry(group.getKey().concat(StringUtils.capitalize(field.getKey())), uuid))
+                        ))
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
+
+    private Mono<String> getEntry(Map.Entry<String, String> field, Long sourceApplicationId, String instanceId) {
         if  ("fil".equals(field.getKey())){
             Mono<UUID> uuidMono = fileClient.postFile(File.builder()
+                    .sourceApplicationId(sourceApplicationId)
+                    .sourceApplicationInstanceId(instanceId)
                     .name("hoveddokument.txt")
                     .type(MediaType.TEXT_PLAIN)
-                    .sourceApplicationId(sourceApplicationId)
-                    .sourceApplicationInstanceId(subsidyInstance.getInstanceId())
                     .encoding("UTF-8")
                     .base64Contents(field.getValue())
                     .build());
 
-            return Map.entry(group.getKey().concat(StringUtils.capitalize(field.getKey())),
-                    uuidMono.block().toString());
+            return uuidMono.map(UUID::toString);
         }
-        return Map.entry(group.getKey().concat(StringUtils.capitalize(field.getKey())),
-                field.getValue());
+        return Mono.just(field.getValue());
     }
 
     private InstanceObject toInstanceObject(Map<String, String> stringStringMap) {
-
-        return InstanceObject
-                .builder()
+        return InstanceObject.builder()
                 .valuePerKey(stringStringMap)
                 .build();
     }
