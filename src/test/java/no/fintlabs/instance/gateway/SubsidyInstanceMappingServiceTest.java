@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -37,14 +36,22 @@ class SubsidyInstanceMappingServiceTest {
                 .instanceId("12345")
                 .fields(Map.of(
                         "kulturminneId", "99",
-                        "saksnummer", "55"
-                ))
+                        "saksnummer", "55",
+                        "fil1", Map.of(
+                                "format", "text/plain",
+                                "filnavn", "fil.txt",
+                                "data", "BASE64_STRING"
+                )))
                 .groups(
                         Map.of("hoveddokument",
                                 Map.of(
                                         "mediatype", "text/plain",
                                         "filnavn", "hoveddokument.txt",
-                                        "fil", "BASE64_STRING"
+                                        "fil2", Map.of(
+                                                "format", "text/plain",
+                                                "filnavn", "fil.txt",
+                                                "data", "BASE64_STRING"
+                                        )
                                 )
                         ))
                 .collections(
@@ -52,7 +59,11 @@ class SubsidyInstanceMappingServiceTest {
                                 Map.of(
                                         "mediatype", "text/plain",
                                         "filnavn", "vedlegg1.txt",
-                                        "fil", "BASE64_STRING"
+                                        "fil3", Map.of(
+                                                "format", "text/plain",
+                                                "filnavn", "fil.txt",
+                                                "data", "BASE64_STRING"
+                                        )
                                 )
                         )))
                 .build();
@@ -73,6 +84,17 @@ class SubsidyInstanceMappingServiceTest {
     }
 
     @Test
+    void shouldConvertFileContentToUuidOnField() {
+        String hoveddokumentUuid = UUID.randomUUID().toString();
+
+        when(fileClient.postFile(any(File.class))).thenReturn(Mono.just(UUID.fromString(hoveddokumentUuid)));
+
+        InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
+
+        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("fil1"));
+    }
+
+    @Test
     void shouldConvertFileContentToUuidOnGroups() {
         String hoveddokumentUuid = UUID.randomUUID().toString();
 
@@ -80,8 +102,7 @@ class SubsidyInstanceMappingServiceTest {
 
         InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
 
-        assertNotEquals("BASE64_STRING", instanceObject.getValuePerKey().get("hoveddokumentFil"));
-        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("hoveddokumentFil"));
+        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("hoveddokumentFil2"));
     }
 
     @Test
@@ -92,8 +113,7 @@ class SubsidyInstanceMappingServiceTest {
 
         InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
 
-        assertNotEquals("BASE64_STRING", instanceObject.getObjectCollectionPerKey().get("vedlegg").stream().findFirst().get().getValuePerKey().get("fil"));
-        assertEquals(vedleggUuid, instanceObject.getObjectCollectionPerKey().get("vedlegg").stream().findFirst().get().getValuePerKey().get("fil"));
+        assertEquals(vedleggUuid, instanceObject.getObjectCollectionPerKey().get("vedlegg").stream().findFirst().get().getValuePerKey().get("fil3"));
     }
 
 }

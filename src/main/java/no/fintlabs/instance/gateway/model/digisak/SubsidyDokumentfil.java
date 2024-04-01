@@ -14,17 +14,15 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @Jacksonized
 @Builder
-public class SubsidyDocument {
+public class SubsidyDokumentfil {
 
     @NotBlank
-    private String name;
+    private String filnavn;
 
     @NotNull
-    private MediaType mediaType;
-
-    private String encoding;
+    private MediaType format;
 
     @NotNull
     @ValidBase64
-    private String base64;
+    private String data;
 }

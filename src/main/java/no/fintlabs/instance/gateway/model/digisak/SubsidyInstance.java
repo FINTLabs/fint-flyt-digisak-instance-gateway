@@ -21,9 +21,9 @@ public class SubsidyInstance {
     private String instanceId;
 
     @NotNull
-    private Map<String, String> fields;
+    private Map<String, Object> fields;
 
-    private Map<String, Map<String, String>> groups;
+    private Map<String, Map<String, Object>> groups;
 
-    private Map<String, List<Map<String, String>>> collections;
+    private Map<String, List<Map<String, Object>>> collections;
 }
