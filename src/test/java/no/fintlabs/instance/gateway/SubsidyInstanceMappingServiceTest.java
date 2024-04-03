@@ -91,7 +91,9 @@ class SubsidyInstanceMappingServiceTest {
 
         InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
 
-        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("fil1"));
+        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("fil1Data"));
+        assertEquals("fil.txt", instanceObject.getValuePerKey().get("fil1Filnavn"));
+        assertEquals("text/plain", instanceObject.getValuePerKey().get("fil1Format"));
     }
 
     @Test
@@ -102,7 +104,9 @@ class SubsidyInstanceMappingServiceTest {
 
         InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
 
-        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("hoveddokumentFil2"));
+        assertEquals(hoveddokumentUuid, instanceObject.getValuePerKey().get("hoveddokumentFil2Data"));
+        assertEquals("fil.txt", instanceObject.getValuePerKey().get("hoveddokumentFil2Filnavn"));
+        assertEquals("text/plain", instanceObject.getValuePerKey().get("hoveddokumentFil2Format"));
     }
 
     @Test
@@ -113,7 +117,12 @@ class SubsidyInstanceMappingServiceTest {
 
         InstanceObject instanceObject = service.map(0L, subsidyInstance).block();
 
-        assertEquals(vedleggUuid, instanceObject.getObjectCollectionPerKey().get("vedlegg").stream().findFirst().get().getValuePerKey().get("fil3"));
+        Map<String, String> vedlegg = instanceObject.getObjectCollectionPerKey().get("vedlegg").stream()
+                                        .findFirst().get().getValuePerKey();
+
+        assertEquals(vedleggUuid, vedlegg.get("fil3Data"));
+        assertEquals("fil.txt", vedlegg.get("fil3Filnavn"));
+        assertEquals("text/plain", vedlegg.get("fil3Format"));
     }
 
 }

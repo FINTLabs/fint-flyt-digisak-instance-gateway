@@ -50,19 +50,21 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
     private Mono<Map<String, String>> fieldValueMapper(SubsidyInstance subsidyInstance) {
         return Flux.fromIterable(subsidyInstance.getFields().entrySet())
                 .flatMap(this::parseObject)
+                .flatMapIterable(Map::entrySet)
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private Mono<Map<String, String>> groupValueMapper(SubsidyInstance instance) {
-        return Flux.fromIterable(instance.getGroups().entrySet())
+    private Mono<Map<String, String>> groupValueMapper(SubsidyInstance subsidyInstance) {
+        return Flux.fromIterable(subsidyInstance.getGroups().entrySet())
                 .flatMap(group -> Flux.fromIterable(group.getValue().entrySet())
-                        .map(field -> Map.entry(concatGroupNameWithFieldName(group, field), field.getValue()))
+                        .map(field -> Map.entry(concatGroupNameWithFieldName(group.getKey(), field.getKey()), field.getValue()))
                         .flatMap(this::parseObject))
+                .flatMapIterable(Map::entrySet)
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private static String concatGroupNameWithFieldName(Map.Entry<String, Map<String, Object>> group, Map.Entry<String, Object> field) {
-        return group.getKey().concat(StringUtils.capitalize(field.getKey()));
+    private static String concatGroupNameWithFieldName(String group, String field) {
+        return group.concat(StringUtils.capitalize(field));
     }
 
     private Mono<Map<String, Collection<InstanceObject>>> collectionValueMapper(SubsidyInstance instance) {
@@ -70,6 +72,7 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
                 .flatMap(entry -> Flux.fromIterable(entry.getValue())
                         .flatMap(collectionMap -> Flux.fromIterable(collectionMap.entrySet())
                                 .flatMap(this::parseObject)
+                                .flatMapIterable(Map::entrySet)
                                 .collectMap(Map.Entry::getKey, Map.Entry::getValue))
                         .map(this::toInstanceObject)
                         .collectList()
@@ -77,24 +80,30 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private Mono<Map.Entry<String, String>> parseObject(Map.Entry<String, Object> field) {
+    private Mono<Map<String, String>> parseObject(Map.Entry<String, Object> field) {
         Object object = field.getValue();
         if (object instanceof Map<?,?>) {
-            SubsidyDokumentfil dokumentfil = toSubsidyDokumentfil((Map<String, String>) object);
+            SubsidyDokumentfil dokumentfil = toSubsidyDokumentfil(object);
             return postFile(dokumentfil, sourceApplicationId, instanceId)
-                    .map(uuid -> Map.entry(field.getKey(), uuid));
+                    .map(uuid -> Map.of(
+                            field.getKey().concat("Data"), uuid,
+                            field.getKey().concat("Format"), dokumentfil.getFormat().toString(),
+                            field.getKey().concat("Filnavn"), dokumentfil.getFilnavn()
+                    ));
         } else if (object instanceof String) {
-            return Mono.just(Map.entry(field.getKey(), (String) object));
+            return Mono.just(Map.of(field.getKey(), (String) object));
         } else {
-            return Mono.error(new IllegalArgumentException("Field value is not a valid type."));
+            String message = String.format("Field ({}) value ({}) is not a valid type.", field.getKey(), field.getValue());
+            return Mono.error(new IllegalArgumentException(message));
         }
     }
 
-    private static SubsidyDokumentfil toSubsidyDokumentfil(Map<String, String> stringStringMap) {
+    private static SubsidyDokumentfil toSubsidyDokumentfil(Object object) {
+        Map<String, String> subsidyDocumentfilMap = (Map<String, String>) object;
         return SubsidyDokumentfil.builder()
-                .filnavn(stringStringMap.get("filnavn"))
-                .format(MediaType.valueOf(stringStringMap.get("format")))
-                .data(stringStringMap.get("data"))
+                .filnavn(subsidyDocumentfilMap.get("filnavn"))
+                .format(MediaType.valueOf(subsidyDocumentfilMap.get("format")))
+                .data(subsidyDocumentfilMap.get("data"))
                 .build();
     }
 

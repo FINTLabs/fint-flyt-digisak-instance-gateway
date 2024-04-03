@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.fintlabs.resourceserver.UrlPaths.EXTERNAL_API;
 
@@ -74,21 +75,12 @@ public class DigisakIntegrationMetadataController {
         return ResponseEntity.accepted().build();
     }
 
-    private static List<InstanceObjectCollectionMetadata> getInstanceObjectCollectionMetadata(SubsidyDefinition subsidyDefinition) {
-        return subsidyDefinition.getCollectionDefinitions().stream()
-                .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
-                        .key(subsidyCollectionDefinition.getId())
-                        .displayName(subsidyCollectionDefinition.getDisplayName())
-                        .objectMetadata(InstanceMetadataContent.builder()
-                                .instanceValueMetadata(
-                                        subsidyCollectionDefinition.getFieldDefinitions().stream()
-                                                .map(subsidyField -> InstanceValueMetadata.builder()
-                                                        .key(subsidyField.getId())
-                                                        .displayName(subsidyField.getDisplayName())
-                                                        .type(getType(subsidyField)).build())
-                                                .collect(Collectors.toList()))
-                                .build())
-                        .build())
+    private static List<InstanceValueMetadata> getInstanceValueMetadata(SubsidyDefinition subsidyDefinition) {
+        return subsidyDefinition.getFieldDefinitions().stream()
+                .map(subsidyField -> InstanceValueMetadata.builder()
+                        .key(subsidyField.getId())
+                        .displayName(subsidyField.getDisplayName())
+                        .type(getType(subsidyField)).build())
                 .collect(Collectors.toList());
     }
 
@@ -99,23 +91,47 @@ public class DigisakIntegrationMetadataController {
                         .content(InstanceMetadataContent.builder()
                                 .instanceValueMetadata(
                                         subsidyGroupDefinition.getFieldDefinitions().stream()
-                                                .map(subsidyField -> InstanceValueMetadata.builder()
-                                                        .key(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())))
-                                                        .displayName(subsidyField.getDisplayName())
-                                                        .type(getType(subsidyField)).build())
+                                                .flatMap(subsidyField ->
+                                                        toInstanceValueMetadata(subsidyGroupDefinition.getId().concat(StringUtils.capitalize(subsidyField.getId())), subsidyField))
                                                 .collect(Collectors.toList()))
                                 .build())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    private static List<InstanceValueMetadata> getInstanceValueMetadata(SubsidyDefinition subsidyDefinition) {
-        return subsidyDefinition.getFieldDefinitions().stream()
-                .map(subsidyField -> InstanceValueMetadata.builder()
-                        .key(subsidyField.getId())
-                        .displayName(subsidyField.getDisplayName())
-                        .type(getType(subsidyField)).build())
+    private static List<InstanceObjectCollectionMetadata> getInstanceObjectCollectionMetadata(SubsidyDefinition subsidyDefinition) {
+        return subsidyDefinition.getCollectionDefinitions().stream()
+                .map(subsidyCollectionDefinition -> InstanceObjectCollectionMetadata.builder()
+                        .key(subsidyCollectionDefinition.getId())
+                        .displayName(subsidyCollectionDefinition.getDisplayName())
+                        .objectMetadata(InstanceMetadataContent.builder()
+                                .instanceValueMetadata(
+                                        subsidyCollectionDefinition.getFieldDefinitions().stream()
+                                                .flatMap(subsidyField -> toInstanceValueMetadata(subsidyField.getId(), subsidyField))
+                                                .collect(Collectors.toList()))
+                                .build())
+                        .build())
                 .collect(Collectors.toList());
+    }
+
+    private static Stream<InstanceValueMetadata> toInstanceValueMetadata(String keyPrefix, SubsidyFieldDefinition subsidyField) {
+        if (InstanceValueMetadata.Type.FILE.equals(getType(subsidyField))){
+            return Stream.of(
+                    toInstanceValueMetadata(keyPrefix.concat("Data"), "Fil", InstanceValueMetadata.Type.FILE),
+                    toInstanceValueMetadata(keyPrefix.concat("Format"),"Format", InstanceValueMetadata.Type.STRING),
+                    toInstanceValueMetadata(keyPrefix.concat("Filnavn"),"Filnavn", InstanceValueMetadata.Type.STRING)
+            );
+        } else {
+            return Stream.of(
+                    toInstanceValueMetadata(keyPrefix, subsidyField.getDisplayName(), getType(subsidyField)));
+        }
+    }
+
+    private static InstanceValueMetadata toInstanceValueMetadata(String key, String displayName, InstanceValueMetadata.Type type) {
+        return InstanceValueMetadata.builder()
+                .key(key)
+                .displayName(displayName)
+                .type(type).build();
     }
 
     private static InstanceValueMetadata.Type getType(SubsidyFieldDefinition subsidyField) {
