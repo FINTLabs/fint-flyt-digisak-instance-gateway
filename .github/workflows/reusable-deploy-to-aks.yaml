@@ -1,0 +1,65 @@
+name: Deploy to ${{ inputs.cluster }}
+
+on:
+  workflow_call:
+    inputs:
+      cluster:
+        required: true
+        type: string
+      tags:
+        required: true
+        type: string
+
+jobs:
+
+  deploy-to-aks:
+    name: ${{ matrix.org }}
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    needs: build-and-publish
+    strategy:
+      fail-fast: false
+      matrix:
+        org: [ fintlabs-no, vlfk-no ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get environment
+        id: environment
+        run: |
+          echo "name=$(cut -d\- -f2 <<< ${{ inputs.cluster }})" >> $GITHUB_OUTPUT
+
+      - name: Bake manifests with Kustomize
+        id: bake
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: 'kustomize'
+          kustomizationPath: 'kustomize/overlays/${{ matrix.org }}/${{ steps.environment.outputs.name }}'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: "${{ secrets[format('AKS_{0}_FINT_GITHUB', steps.environment.outputs.name)] }}"
+
+      - name: Set the target cluster
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: ${{ inputs.cluster }}
+          resource-group: rg-aks-${{ steps.environment.outputs.name }}
+          admin: true
+
+      - if: github.ref != format('refs/heads/{0}', github.event.repository.default_branch) && matrix.deploy-every-branch != true
+        run: |
+          {
+            echo "## Dry run - not a real deploy"
+            echo "To deploy, merge to ${{ github.event.repository.default_branch }}." 
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy to Kubernetes
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || matrix.deploy-every-branch == true
+        uses: azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.bake.outputs.manifestsBundle }}
+          images: ${{ inputs.tags }}
+          namespace: ${{ matrix.org }}
