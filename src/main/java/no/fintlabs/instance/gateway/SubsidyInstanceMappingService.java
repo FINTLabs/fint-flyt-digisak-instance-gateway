@@ -23,8 +23,6 @@ import java.util.UUID;
 public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInstance> {
 
     private final FileClient fileClient;
-    private String instanceId;
-    private Long sourceApplicationId;
 
     public SubsidyInstanceMappingService(FileClient fileClient) {
         this.fileClient = fileClient;
@@ -32,55 +30,68 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
 
     @Override
     public Mono<InstanceObject> map(Long sourceApplicationId, SubsidyInstance subsidyInstance) {
-        this.instanceId = subsidyInstance.getInstanceId();
-        this.sourceApplicationId = sourceApplicationId;
 
-        return Mono.zip(fieldValueMapper(subsidyInstance),
-                        groupValueMapper(subsidyInstance),
-                        collectionValueMapper(subsidyInstance))
-                .map(collectionValue ->
-                        InstanceObject.builder()
-                                .valuePerKey(new HashMap<>() {{
-                                    putAll(collectionValue.getT1());
-                                    putAll(collectionValue.getT2()); }})
-                                .objectCollectionPerKey(collectionValue.getT3())
-                                .build());
+        return Mono.zip(
+                    fieldValueMapper(subsidyInstance.getFields(), sourceApplicationId, subsidyInstance.getInstanceId()),
+                    groupValueMapper(subsidyInstance, sourceApplicationId),
+                    collectionValueMapper(subsidyInstance, sourceApplicationId))
+                .map(zip -> toInstanceObject(zip.getT1(), zip.getT2(), zip.getT3()));
     }
 
-    private Mono<Map<String, String>> fieldValueMapper(SubsidyInstance subsidyInstance) {
-        return Flux.fromIterable(subsidyInstance.getFields().entrySet())
-                .flatMap(this::parseObject)
+    private InstanceObject toInstanceObject(Map<String, String> fields,
+                                                   Map<String, String> groups,
+                                                   Map<String, Collection<InstanceObject>> collections) {
+        return InstanceObject.builder()
+                .valuePerKey(new HashMap<>() {{
+                    putAll(fields);
+                    putAll(groups);}})
+                .objectCollectionPerKey(collections)
+                .build();
+    }
+
+    private InstanceObject toInstanceObject(Map<String, String> fieldsInCollection) {
+        return InstanceObject.builder()
+                .valuePerKey(fieldsInCollection)
+                .build();
+    }
+
+    private Mono<Map<String, String>> fieldValueMapper(Map<String, Object> fields, Long sourceApplicationId, String instanceId) {
+        return Flux.fromIterable(fields.entrySet())
+                .flatMap(field -> parseField(field, sourceApplicationId, instanceId))
                 .flatMapIterable(Map::entrySet)
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private Mono<Map<String, String>> groupValueMapper(SubsidyInstance subsidyInstance) {
+    private Mono<Map<String, String>> groupValueMapper(SubsidyInstance subsidyInstance, Long sourceApplicationId) {
         return Flux.fromIterable(subsidyInstance.getGroups().entrySet())
-                .flatMap(group -> Flux.fromIterable(group.getValue().entrySet())
-                        .map(field -> Map.entry(concatGroupNameWithFieldName(group.getKey(), field.getKey()), field.getValue()))
-                        .flatMap(this::parseObject))
+                .flatMap(group -> fieldValueMapperInGroup(subsidyInstance, sourceApplicationId, group))
                 .flatMapIterable(Map::entrySet)
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private static String concatGroupNameWithFieldName(String group, String field) {
+    private Flux<Map<String, String>> fieldValueMapperInGroup(SubsidyInstance subsidyInstance, Long sourceApplicationId, Map.Entry<String, Map<String, Object>> group) {
+        return Flux.fromIterable(group.getValue().entrySet())
+                .map(field -> Map.entry(
+                        concatGroupNameWithFieldName(group.getKey(), field.getKey()),
+                        field.getValue()))
+                .flatMap(field -> parseField(field, sourceApplicationId, subsidyInstance.getInstanceId()));
+    }
+
+    private String concatGroupNameWithFieldName(String group, String field) {
         return group.concat(StringUtils.capitalize(field));
     }
 
-    private Mono<Map<String, Collection<InstanceObject>>> collectionValueMapper(SubsidyInstance instance) {
+    private Mono<Map<String, Collection<InstanceObject>>> collectionValueMapper(SubsidyInstance instance, Long sourceApplicationId) {
         return Flux.fromIterable(instance.getCollections().entrySet())
                 .flatMap(entry -> Flux.fromIterable(entry.getValue())
-                        .flatMap(collectionMap -> Flux.fromIterable(collectionMap.entrySet())
-                                .flatMap(this::parseObject)
-                                .flatMapIterable(Map::entrySet)
-                                .collectMap(Map.Entry::getKey, Map.Entry::getValue))
+                        .flatMap(collectionMap -> fieldValueMapper(collectionMap, sourceApplicationId, instance.getInstanceId()))
                         .map(this::toInstanceObject)
                         .collectList()
                         .map(list -> Map.entry(entry.getKey(), list)))
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    private Mono<Map<String, String>> parseObject(Map.Entry<String, Object> field) {
+    private Mono<Map<String, String>> parseField(Map.Entry<String, Object> field, Long sourceApplicationId, String instanceId) {
         Object object = field.getValue();
         if (object instanceof Map<?,?>) {
             SubsidyDokumentfil dokumentfil = toSubsidyDokumentfil(object);
@@ -93,12 +104,12 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
         } else if (object instanceof String) {
             return Mono.just(Map.of(field.getKey(), (String) object));
         } else {
-            String message = String.format("Field ({}) value ({}) is not a valid type.", field.getKey(), field.getValue());
+            String message = String.format("Field (%s) with value (%s) is not a valid type.", field.getKey(), field.getValue());
             return Mono.error(new IllegalArgumentException(message));
         }
     }
 
-    private static SubsidyDokumentfil toSubsidyDokumentfil(Object object) {
+    private SubsidyDokumentfil toSubsidyDokumentfil(Object object) {
         Map<String, String> subsidyDocumentfilMap = (Map<String, String>) object;
         return SubsidyDokumentfil.builder()
                 .filnavn(subsidyDocumentfilMap.get("filnavn"))
@@ -108,21 +119,15 @@ public class SubsidyInstanceMappingService implements InstanceMapper<SubsidyInst
     }
 
     private Mono<String> postFile(SubsidyDokumentfil field, Long sourceApplicationId, String instanceId) {
-        Mono<UUID> uuidMono = fileClient.postFile(File.builder()
-                    .sourceApplicationId(sourceApplicationId)
-                    .sourceApplicationInstanceId(instanceId)
-                    .name(field.getFilnavn())
-                    .type(field.getFormat())
-                    .encoding("UTF-8")
-                    .base64Contents(field.getData())
-                    .build());
-
-        return uuidMono.map(UUID::toString);
-    }
-
-    private InstanceObject toInstanceObject(Map<String, String> stringStringMap) {
-        return InstanceObject.builder()
-                .valuePerKey(stringStringMap)
+        File fileContent = File.builder()
+                .sourceApplicationId(sourceApplicationId)
+                .sourceApplicationInstanceId(instanceId)
+                .name(field.getFilnavn())
+                .type(field.getFormat())
+                .encoding("UTF-8")
+                .base64Contents(field.getData())
                 .build();
+        return fileClient.postFile(fileContent)
+                .map(UUID::toString);
     }
 }
