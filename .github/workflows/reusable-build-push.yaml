@@ -3,7 +3,8 @@ name: Build and push to GHCR
 on:
   workflow_call:
     outputs:
-      tags: ${{ jobs.build-and-publish.outputs.tags }}
+      tags:
+        value: ${{ jobs.build-and-publish.outputs.tags }}
 
 jobs:
 
