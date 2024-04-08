@@ -16,7 +16,6 @@ jobs:
     name: ${{ matrix.org }}
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
-    needs: build-and-publish
     strategy:
       fail-fast: false
       matrix:

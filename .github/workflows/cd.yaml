@@ -8,6 +8,7 @@ jobs:
     uses: ./.github/workflows/reusable-build-push.yaml
 
   reusable-deploy-to-aks:
+    needs: reusable-build-push
     strategy:
       matrix:
         cluster: [ aks-beta-fint-2021-11-23 ]
