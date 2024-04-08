@@ -14,5 +14,6 @@ jobs:
         cluster: [ aks-beta-fint-2021-11-23 ]
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
-        cluster: ${{ matrix.cluster }}
-        tags: ${{ needs.reusable-build-push.outputs.tags }}
+      cluster: ${{ matrix.cluster }}
+      tags: ${{ needs.reusable-build-push.outputs.tags }}
+    secrets: inherit
