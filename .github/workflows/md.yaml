@@ -19,12 +19,7 @@ on:
         type: choice
         options:
           - fintlabs-no
-          - innlandetfylke-no
-          - mrfylke-no
-          - nfk-no
           - vlfk-no
-          - trondelagfylke-no
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -120,7 +115,7 @@ jobs:
           use-kubelogin: 'true'
 
       - name: Deploy to ${{ env.CLUSTER_NAME }}
-        uses: azure/k8s-deploy@v4
+        uses: azure/k8s-deploy@v5
         with:
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
           images: |
