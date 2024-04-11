@@ -16,13 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
-      orgs-beta: ${{ steps.organizations.outputs.beta }}
-      orgs-api: ${{ steps.organizations.outputs.api }}
+      organizations-beta: ${{ steps.organizations.outputs.beta }}
+      organizations-api: ${{ steps.organizations.outputs.api }}
     env:
       DOCKER_BUILDKIT: 1
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Get organizations
+        id: organizations
+        run: |
+          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+          echo "beta=[$BETA]" >> $GITHUB_OUTPUT 
+          echo "beta: [$BETA]" >> $GITHUB_STEP_SUMMARY
+          API=$(find kustomize/overlays -name 'api' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+          echo "api=[$API]" >> $GITHUB_OUTPUT
+          echo "api: [$API]" >> $GITHUB_STEP_SUMMARY
 
       - name: Docker meta
         id: meta
@@ -48,12 +58,3 @@ jobs:
           push: ${{ github.actor != 'dependabot[bot]' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Get organizations
-        id: organizations
-        run: |
-          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-          echo "beta=[$BETA]" >> $GITHUB_OUTPUT 
-          echo "beta=[$BETA]" >> $GITHUB_STEP_SUMMARY
-#          API=$(find kustomize/overlays -name 'api' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-#          echo "api=[$API]" >> $GITHUB_OUTPUT >> $GITHUB_STEP_SUMMARY

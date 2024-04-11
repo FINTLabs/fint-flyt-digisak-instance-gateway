@@ -9,7 +9,7 @@ on:
       tags:
         required: true
         type: string
-      orgs:
+      organizations:
         required: true
         type: string
 
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        org: ${{ fromJson(inputs.orgs) }}
+        org: ${{ fromJson(inputs.organizations) }}
     steps:
       - uses: actions/checkout@v4
 

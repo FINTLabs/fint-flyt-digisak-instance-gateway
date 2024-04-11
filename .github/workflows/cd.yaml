@@ -13,7 +13,7 @@ jobs:
     with:
       cluster: aks-beta-fint-2021-11-23
       tags: ${{ needs.build-push.outputs.tags }}
-      orgs: ${{ needs.build-push.outputs.orgs-beta }}
+      organizations: ${{ needs.build-push.outputs.organizations-beta }}
     secrets: inherit
 
 #    deploy-api:
@@ -22,4 +22,5 @@ jobs:
 #      with:
 #        cluster: aks-api-fint-2022-02-08
 #        tags: ${{ needs.build-push.outputs.tags }}
+#        organizations: ${{ needs.build-push.outputs.organizations-api }}
 #      secrets: inherit
