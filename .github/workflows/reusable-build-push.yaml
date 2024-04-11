@@ -52,5 +52,5 @@ jobs:
       - name: Get organizations
         id: organizations
         run: |
-          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|\1|' | paste -sd, -)
+          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"&"|' | paste -sd, -)
           echo "beta=[$BETA]" >> $GITHUB_OUTPUT
