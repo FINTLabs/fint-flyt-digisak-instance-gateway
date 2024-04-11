@@ -24,6 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get organizations
+        id: organizations
+        run: |
+          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"&"|' | paste -sd, -)
+          echo "beta=[$BETA]" >> $GITHUB_OUTPUT
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -48,9 +54,3 @@ jobs:
           push: ${{ github.actor != 'dependabot[bot]' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Get organizations
-        id: organizations
-        run: |
-          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"&"|' | paste -sd, -)
-          echo "beta=[$BETA]" >> $GITHUB_OUTPUT
