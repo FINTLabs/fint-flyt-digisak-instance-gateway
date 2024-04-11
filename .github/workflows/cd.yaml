@@ -18,7 +18,7 @@ jobs:
     secrets: inherit
 
   deploy-api:
-    needs: reusable-build-push
+    needs: deploy-beta
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
       cluster: aks-api-fint-2022-02-08
