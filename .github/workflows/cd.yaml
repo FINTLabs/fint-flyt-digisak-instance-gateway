@@ -4,16 +4,22 @@ on: push
 
 jobs:
 
-  reusable-build-push:
+  build-push:
     uses: ./.github/workflows/reusable-build-push.yaml
 
-  reusable-deploy-to-aks:
-    needs: reusable-build-push
-    strategy:
-      matrix:
-        cluster: [ aks-beta-fint-2021-11-23 ]
+  deploy-beta:
+    needs: build-push
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
-      cluster: ${{ matrix.cluster }}
-      tags: ${{ needs.reusable-build-push.outputs.tags }}
+      cluster: aks-beta-fint-2021-11-23
+      tags: ${{ needs.build-push.outputs.tags }}
+      orgs: ${{ needs.build-push.outputs.orgs-beta }}
     secrets: inherit
+
+#    deploy-api:
+#      needs: reusable-build-push
+#      uses: ./.github/workflows/reusable-deploy-to-aks.yaml
+#      with:
+#        cluster: aks-api-fint-2022-02-08
+#        tags: ${{ needs.build-push.outputs.tags }}
+#      secrets: inherit
