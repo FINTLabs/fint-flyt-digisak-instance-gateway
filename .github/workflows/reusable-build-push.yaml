@@ -5,10 +5,10 @@ on:
     outputs:
       tags:
         value: ${{ jobs.build-and-publish.outputs.tags }}
-      orgs-beta:
-        value: ${{ jobs.build-and-publish.outputs.orgs-beta }}
-      orgs-api:
-        value: ${{ jobs.build-and-publish.outputs.orgs-api }}
+      organizations-beta:
+        value: ${{ jobs.build-and-publish.outputs.organizations-beta }}
+      organizations-api:
+        value: ${{ jobs.build-and-publish.outputs.organizations-api }}
 
 jobs:
 
@@ -30,9 +30,9 @@ jobs:
           BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
           echo "beta=[$BETA]" >> $GITHUB_OUTPUT 
           echo "beta: [$BETA]" >> $GITHUB_STEP_SUMMARY
-#          API=$(find kustomize/overlays -name 'api' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-#          echo "api=[$API]" >> $GITHUB_OUTPUT
-#          echo "api: [$API]" >> $GITHUB_STEP_SUMMARY
+          API=$(find kustomize/overlays -name 'api' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+          echo "api=[$API]" >> $GITHUB_OUTPUT
+          echo "api: [$API]" >> $GITHUB_STEP_SUMMARY
 
       - name: Docker meta
         id: meta

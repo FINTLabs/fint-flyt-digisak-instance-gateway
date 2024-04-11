@@ -14,13 +14,15 @@ jobs:
       cluster: aks-beta-fint-2021-11-23
       tags: ${{ needs.build-push.outputs.tags }}
       organizations: ${{ needs.build-push.outputs.organizations-beta }}
+      deploy-every-branch: true
     secrets: inherit
 
-#    deploy-api:
-#      needs: reusable-build-push
-#      uses: ./.github/workflows/reusable-deploy-to-aks.yaml
-#      with:
-#        cluster: aks-api-fint-2022-02-08
-#        tags: ${{ needs.build-push.outputs.tags }}
-#        organizations: ${{ needs.build-push.outputs.organizations-api }}
-#      secrets: inherit
+  deploy-api:
+    needs: reusable-build-push
+    uses: ./.github/workflows/reusable-deploy-to-aks.yaml
+    with:
+      cluster: aks-api-fint-2022-02-08
+      tags: ${{ needs.build-push.outputs.tags }}
+      organizations: ${{ needs.build-push.outputs.organizations-api }}
+      deploy-every-branch: false
+    secrets: inherit
