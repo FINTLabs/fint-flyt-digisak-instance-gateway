@@ -6,9 +6,9 @@ on:
       tags:
         value: ${{ jobs.build-and-publish.outputs.tags }}
       orgs-beta:
-        value: ${{ steps.organizations.outputs.beta }}
+        value: ${{ jobs.build-and-publish.outputs.orgs-beta }}
       orgs-api:
-        value: ${{ steps.organizations.outputs.api }}
+        value: ${{ jobs.build-and-publish.outputs.orgs-api }}
 
 jobs:
 
@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
+      orgs-beta: ${{ steps.organizations.outputs.beta }}
+      orgs-api: ${{ steps.organizations.outputs.api }}
     env:
       DOCKER_BUILDKIT: 1
 
