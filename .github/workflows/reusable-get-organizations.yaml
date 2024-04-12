@@ -4,9 +4,9 @@ on:
   workflow_call:
     outputs:
       beta:
-        value: ${{ jobs.get-organizations.outputs.beta }}
+        value: ${{ jobs.get-org-from-commit.outputs.beta && jobs.get-org-from-commit.outputs.beta || jobs.get-organizations.outputs.beta  }}
       api:
-        value: ${{ jobs.get-organizations.outputs.api }}
+        value: ${{ jobs.get-org-from-commit.outputs.api && jobs.get-org-from-commit.outputs.api || jobs.get-organizations.outputs.api }}
 
 jobs:
 
@@ -21,19 +21,20 @@ jobs:
       - name: Get organizations
         id: organizations
         run: |
+          echo "Organizations from Kustomize:" >> $GITHUB_STEP_SUMMARY
           for ENV in beta api
           do
-            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -) 
             echo "$ENV=[$ORGS]" >> $GITHUB_OUTPUT 
-            echo "$ENV: [$ORGS]" >> $GITHUB_STEP_SUMMARY
+            echo "* $ENV: [$ORGS]" >> $GITHUB_STEP_SUMMARY
           done
 
       - name: Get organization from commit message
-        id: get-org
+        id: get-org-from-commit
         run: |
           ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
           if [ -z "$ORG" ]; then
-             echo "No org in commit message. Using organizations from kustomize file structure." >> $GITHUB_STEP_SUMMARY
+             echo "No organization in commit message. Using organizations from Kustomize file structure." >> $GITHUB_STEP_SUMMARY
           else
             echo "beta=['$ORG']" >> $GITHUB_OUTPUT
             echo "api=['$ORG']" >> $GITHUB_OUTPUT
