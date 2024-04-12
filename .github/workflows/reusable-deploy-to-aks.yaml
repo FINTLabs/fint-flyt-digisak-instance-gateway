@@ -13,7 +13,6 @@ on:
         type: string
       organizations:
         description:  'Comma-separated string of organizations to deploy to'
-        default: ''
         required: true
         type: string
       deploy-every-branch:

@@ -27,12 +27,12 @@ jobs:
       - name: Get organizations
         id: organizations
         run: |
-          BETA=$(find kustomize/overlays -name 'beta' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-          echo "beta=$BETA" >> $GITHUB_OUTPUT 
-          echo "beta: $BETA" >> $GITHUB_STEP_SUMMARY
-          API=$(find kustomize/overlays -name 'api' -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-          echo "api=$API" >> $GITHUB_OUTPUT
-          echo "api: $API" >> $GITHUB_STEP_SUMMARY
+          for ENV in beta api
+          do
+            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+            echo "$ENV=$ORGS" >> $GITHUB_OUTPUT 
+            echo "$ENV: $ORGS" >> $GITHUB_STEP_SUMMARY
+          done
 
       - name: Docker meta
         id: meta
