@@ -17,12 +17,12 @@ jobs:
       deploy-every-branch: true
     secrets: inherit
 
-#  deploy-api:
-#    needs: deploy-beta
-#    uses: ./.github/workflows/reusable-deploy-to-aks.yaml
-#    with:
-#      cluster: aks-api-fint-2022-02-08
-#      tags: ${{ needs.build-push.outputs.tags }}
-#      organizations: ${{ needs.build-push.outputs.organizations-api }}
-#      deploy-every-branch: false
-#    secrets: inherit
+  deploy-api:
+    needs: deploy-beta
+    uses: ./.github/workflows/reusable-deploy-to-aks.yaml
+    with:
+      cluster: aks-api-fint-2022-02-08
+      tags: ${{ needs.build-push.outputs.tags }}
+      organizations: ${{ needs.build-push.outputs.organizations-api }}
+      deploy-every-branch: false
+    secrets: inherit
