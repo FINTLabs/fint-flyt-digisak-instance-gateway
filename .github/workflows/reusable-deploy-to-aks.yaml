@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        org: ${{ fromJson( format('["{0}"]', inputs.organizations) ) }}
+        org: ${{ fromJson( format('[{0}]', inputs.organizations) ) }}
     steps:
       - uses: actions/checkout@v4
 
