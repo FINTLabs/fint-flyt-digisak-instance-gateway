@@ -1,0 +1,41 @@
+name: Get organizations from kustomize file structure or commit message
+
+on:
+  workflow_call:
+    outputs:
+      beta:
+        value: ${{ jobs.get-organizations.outputs.beta }}
+      api:
+        value: ${{ jobs.get-organizations.outputs.api }}
+
+jobs:
+
+  get-organizations:
+    runs-on: ubuntu-latest
+    outputs:
+      beta: ${{ steps.organizations.outputs.beta }}
+      api: ${{ steps.organizations.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get organizations
+        id: organizations
+        run: |
+          for ENV in beta api
+          do
+            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+            echo "$ENV=[$ORGS]" >> $GITHUB_OUTPUT 
+            echo "$ENV: [$ORGS]" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Get organization from commit message
+        id: get-org
+        run: |
+          ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
+          if [ -z "$ORG" ]; then
+             echo "No org in commit message. Using organizations from kustomize file structure." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "beta=['$ORG']" >> $GITHUB_OUTPUT
+            echo "api=['$ORG']" >> $GITHUB_OUTPUT
+            echo "Using organization from commit message: $ORG" >> $GITHUB_STEP_SUMMARY
+          fi
