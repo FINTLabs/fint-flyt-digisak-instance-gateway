@@ -1,8 +1,42 @@
 name: CD
 
+# This workflow is triggered on every push
+# [skip ci] can be added to the commit message to skip the CI workflow
+# org:<org> can be added to the commit message to deploy to a specific organisation
+
 on: push
 
 jobs:
+
+  organizations-to-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      beta: ${{ steps.organizations.outputs.beta }}
+      api: ${{ steps.organizations.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get organizations
+        id: organizations
+        run: |
+          for ENV in beta api
+          do
+            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
+            echo "$ENV=[$ORGS]" >> $GITHUB_OUTPUT 
+            echo "$ENV: [$ORGS]" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Get organization from commit message
+        id: get-org
+        run: |
+          ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
+          if [ -z "$ORG" ]; then
+             echo "No org in commit message. Using organizations from kustomize file structure." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "beta=['$ORG']" >> $GITHUB_OUTPUT
+            echo "api=['$ORG']" >> $GITHUB_OUTPUT
+            echo "Using organization from commit message: $ORG" >> $GITHUB_STEP_SUMMARY
+          fi
 
   build-push:
     uses: ./.github/workflows/reusable-build-push.yaml
@@ -13,7 +47,7 @@ jobs:
     with:
       cluster: aks-beta-fint-2021-11-23
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ needs.build-push.outputs.organizations-beta }}
+      organizations: ${{ needs.organizations-to-deploy.outputs.beta }}
       deploy-every-branch: true
     secrets: inherit
 
@@ -23,6 +57,6 @@ jobs:
     with:
       cluster: aks-api-fint-2022-02-08
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ needs.build-push.outputs.organizations-api }}
+      organizations: ${{ needs.organizations-to-deploy.outputs.api }}
       deploy-every-branch: false
     secrets: inherit

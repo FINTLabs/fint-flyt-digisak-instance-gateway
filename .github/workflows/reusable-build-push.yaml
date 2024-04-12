@@ -5,10 +5,6 @@ on:
     outputs:
       tags:
         value: ${{ jobs.build-and-publish.outputs.tags }}
-      organizations-beta:
-        value: ${{ jobs.build-and-publish.outputs.organizations-beta }}
-      organizations-api:
-        value: ${{ jobs.build-and-publish.outputs.organizations-api }}
 
 jobs:
 
@@ -16,23 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
-      organizations-beta: ${{ steps.organizations.outputs.beta }}
-      organizations-api: ${{ steps.organizations.outputs.api }}
     env:
       DOCKER_BUILDKIT: 1
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Get organizations
-        id: organizations
-        run: |
-          for ENV in beta api
-          do
-            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -)
-            echo "$ENV=$ORGS" >> $GITHUB_OUTPUT 
-            echo "$ENV: $ORGS" >> $GITHUB_STEP_SUMMARY
-          done
 
       - name: Docker meta
         id: meta

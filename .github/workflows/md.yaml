@@ -32,6 +32,6 @@ jobs:
     with:
       cluster: ${{ inputs.cluster }}
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ format('"{0}"', inputs.org) }}
+      organizations: ${{ format('["{0}"]', inputs.org) }}
       deploy-every-branch: true
     secrets: inherit
