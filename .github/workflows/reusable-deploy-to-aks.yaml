@@ -19,7 +19,7 @@ on:
 jobs:
 
   deploy-to-aks:
-    name: ${{ matrix.org }}s
+    name: ${{ matrix.org }}
     if: github.actor != 'dependabot[bot]' && inputs.organizations != '[]' && inputs.organizations != ''
     runs-on: ubuntu-latest
     strategy:
