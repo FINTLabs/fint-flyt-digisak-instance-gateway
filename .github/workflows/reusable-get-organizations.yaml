@@ -4,21 +4,21 @@ on:
   workflow_call:
     outputs:
       beta:
-        value: ${{ jobs.get-org-from-commit.outputs.beta && jobs.get-org-from-commit.outputs.beta || jobs.get-organizations.outputs.beta  }}
+        value: ${{ jobs.get-organizations.outputs.beta }}
       api:
-        value: ${{ jobs.get-org-from-commit.outputs.api && jobs.get-org-from-commit.outputs.api || jobs.get-organizations.outputs.api }}
+        value: ${{ jobs.get-organizations.outputs.api }}
 
 jobs:
 
   get-organizations:
     runs-on: ubuntu-latest
     outputs:
-      beta: ${{ steps.organizations.outputs.beta }}
-      api: ${{ steps.organizations.outputs.api }}
+      beta: ${{ steps.org-from-commit.outputs.beta && steps.org-from-commit.outputs.beta || steps.organizations.outputs.beta }}
+      api: ${{ steps.org-from-commit.outputs.api && steps.org-from-commit.outputs.api || steps.organizations.outputs.api }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get organizations
+      - name: Get organizations from Kustomize
         id: organizations
         run: |
           echo "Organizations from Kustomize:" >> $GITHUB_STEP_SUMMARY
@@ -30,7 +30,7 @@ jobs:
           done
 
       - name: Get organization from commit message
-        id: get-org-from-commit
+        id: org-from-commit
         run: |
           ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
           if [ -z "$ORG" ]; then
