@@ -24,7 +24,7 @@ jobs:
 
   deploy-to-aks:
     name: ${{ matrix.org }}
-    if: github.actor != 'dependabot[bot]' && inputs.organizations != ''
+    if: github.actor != 'dependabot[bot]' && inputs.organizations != '' && inputs.organizations != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
