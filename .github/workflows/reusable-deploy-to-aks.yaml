@@ -4,15 +4,19 @@ on:
   workflow_call:
     inputs:
       cluster:
+        description: 'Select an environment cluster'
         required: true
         type: string
       tags:
+        description: 'Docker metadata tags to deploy'
         required: true
         type: string
       organizations:
+        description:  'Comma-separated string of organizations to deploy to'
         required: true
         type: string
       deploy-every-branch:
+        description: 'Deploy on every branch, not just the default branch'
         required: false
         type: boolean
 
@@ -20,12 +24,12 @@ jobs:
 
   deploy-to-aks:
     name: ${{ matrix.org }}
-    if: github.actor != 'dependabot[bot]' && inputs.organizations != '[]' && inputs.organizations != ''
+    if: github.actor != 'dependabot[bot]' && inputs.organizations != ''
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        org: ${{ fromJson( inputs.organizations ) }}
+        org: ${{ fromJson( format('["{0}"]', inputs.organizations) ) }}
     steps:
       - uses: actions/checkout@v4
 
