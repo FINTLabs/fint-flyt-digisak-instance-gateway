@@ -26,12 +26,12 @@ jobs:
   build-push:
     uses: ./.github/workflows/reusable-build-push.yaml
 
-  deploy-beta:
+  deploy:
     needs: build-push
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
       cluster: ${{ inputs.cluster }}
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ inputs.org }}
+      organizations: ${{ format('"{0}"', inputs.org) }}
       deploy-every-branch: true
     secrets: inherit
