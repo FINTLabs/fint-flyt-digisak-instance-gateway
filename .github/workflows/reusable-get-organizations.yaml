@@ -4,9 +4,9 @@ on:
   workflow_call:
     outputs:
       beta:
-        value: ${{ jobs.get-organizations.outputs.beta }}
+        value: ${{ jobs.generated-outputs.outputs.beta }}
       api:
-        value: ${{ jobs.get-organizations.outputs.api }}
+        value: ${{ jobs.generated-outputs.outputs.api }}
 
 jobs:
 
@@ -33,10 +33,17 @@ jobs:
         id: org-from-commit
         run: |
           ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
-          if [ -z "$ORG" ]; then
-             echo "No organization in commit message. Using organizations from Kustomize file structure." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "beta=['$ORG']" >> $GITHUB_OUTPUT
-            echo "api=['$ORG']" >> $GITHUB_OUTPUT
+          echo "org=$ORG" >> $GITHUB_OUTPUT
+
+      - name: Generate output
+        id: generated-outputs
+        run: |
+          if [ -z ${{ grep steps.org-from-commit.outputs.org }} ] ; then
+            echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
+            echo "beta=${{ grep steps.organizations.outputs.beta }}" >> $GITHUB_OUTPUT
+            echo "api=${{ grep steps.organizations.outputs.api }}" >> $GITHUB_OUTPUT
+          else   
             echo "Using organization from commit message: $ORG" >> $GITHUB_STEP_SUMMARY
+            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]'" }}" >> $GITHUB_OUTPUT
+            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]'" }}" >> $GITHUB_OUTPUT
           fi
