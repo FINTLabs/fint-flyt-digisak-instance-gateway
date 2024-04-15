@@ -38,7 +38,7 @@ jobs:
       - name: Generate output
         id: generated-outputs
         run: |
-          if [ -z ${{ grep steps.org-from-commit.outputs.org }} ] ; then
+          if [ -z ${{ steps.org-from-commit.outputs.org }} ] ; then
             echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
             echo "beta=${{ grep steps.organizations.outputs.beta }}" >> $GITHUB_OUTPUT
             echo "api=${{ grep steps.organizations.outputs.api }}" >> $GITHUB_OUTPUT
