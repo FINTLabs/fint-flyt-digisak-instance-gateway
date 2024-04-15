@@ -4,17 +4,17 @@ on:
   workflow_call:
     outputs:
       beta:
-        value: ${{ jobs.generated-outputs.outputs.beta }}
+        value: ${{ jobs.get-organizations.outputs.beta }}
       api:
-        value: ${{ jobs.generated-outputs.outputs.api }}
+        value: ${{ jobs.get-organizations.outputs.api }}
 
 jobs:
 
   get-organizations:
     runs-on: ubuntu-latest
     outputs:
-      beta: ${{ steps.org-from-commit.outputs.beta && steps.org-from-commit.outputs.beta || steps.organizations.outputs.beta }}
-      api: ${{ steps.org-from-commit.outputs.api && steps.org-from-commit.outputs.api || steps.organizations.outputs.api }}
+      beta: ${{ steps.generated-outputs.outputs.beta }}
+      api: ${{ steps.generated-outputs.outputs.api }}
     steps:
       - uses: actions/checkout@v4
 
