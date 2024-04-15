@@ -32,7 +32,7 @@ jobs:
       - name: Get organization from commit message
         id: org-from-commit
         run: |
-          ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
+          ORG=$(git log -1 --pretty=format:'%s' | awk '{for(i=1;i<=NF;i++) if ($i ~ /^org:/) {print substr($i,5); exit}}')
           echo "org=$ORG" >> $GITHUB_OUTPUT
 
       - name: Generate output
