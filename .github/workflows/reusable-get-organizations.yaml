@@ -44,6 +44,6 @@ jobs:
             echo "api=${{ steps.organizations.outputs.api }}" >> $GITHUB_OUTPUT
           else   
             echo "Using organization from commit message: $ORG" >> $GITHUB_STEP_SUMMARY
-            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]'" }}" >> $GITHUB_OUTPUT
-            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]'" }}" >> $GITHUB_OUTPUT
+            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
+            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
           fi
