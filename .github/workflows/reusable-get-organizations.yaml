@@ -50,11 +50,11 @@ jobs:
             echo "Using organization from commit message: $COMMIT_ORG" >> $GITHUB_STEP_SUMMARY
             
             if [[ "$KUSTOMIZE_BETA_ORGS" == *"$COMMIT_ORG"* ]]; then
-              echo "beta=[\"\\\"$COMMIT_ORG\\\"\"]" >> $GITHUB_OUTPUT
+              echo "beta=[\"$COMMIT_ORG\"]" >> $GITHUB_OUTPUT
             fi
             
             if [[ "$KUSTOMIZE_API_ORGS" == *"$COMMIT_ORG"* ]]; then
-              echo "api=[\"\\\"$COMMIT_ORG\\\"\"]" >> $GITHUB_OUTPUT
+              echo "api=[\"$COMMIT_ORG\"]" >> $GITHUB_OUTPUT
             fi   
           
           fi
