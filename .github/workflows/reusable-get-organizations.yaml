@@ -33,21 +33,31 @@ jobs:
         id: org-from-commit
         run: |
           ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
-          echo "org=[\"\\\"$ORG\\\"\"]" >> $GITHUB_OUTPUT
+          echo "org=$ORG" >> $GITHUB_OUTPUT
 
       - name: Generate output
         id: generated-outputs
+        env:
+          KUSTOMIZE_BETA_ORGS: ${{ steps.organizations.outputs.beta }}
+          KUSTOMIZE_API_ORGS: ${{ steps.organizations.outputs.api }}
+          COMMIT_ORG: ${{ steps.org-from-commit.outputs.org }}
         run: |
-          if [ -z ${{ steps.org-from-commit.outputs.org }} ] ; then
+          if [ -z $COMMIT_ORG ] ; then
             echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
-            echo "beta=${{ steps.organizations.outputs.beta }}" >> $GITHUB_OUTPUT
-            echo "api=${{ steps.organizations.outputs.api }}" >> $GITHUB_OUTPUT
-            echo "beta=${{ steps.organizations.outputs.beta }}" >> $GITHUB_STEP_SUMMARY
-            echo "api=${{ steps.organizations.outputs.api }}" >> $GITHUB_STEP_SUMMARY
+            echo "beta=$KUSTOMIZE_BETA_ORGS" >> $GITHUB_OUTPUT
+            echo "api=$KUSTOMIZE_API_ORGS" >> $GITHUB_OUTPUT
           else   
-            echo "Using organization from commit message: ${{ steps.org-from-commit.outputs.org }}" >> $GITHUB_STEP_SUMMARY
-            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
-            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
-            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_STEP_SUMMARY
-            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_STEP_SUMMARY
+            echo "Using organization from commit message: $COMMIT_ORG" >> $GITHUB_STEP_SUMMARY
+            
+            if [[ "$KUSTOMIZE_BETA_ORGS" == *"$COMMIT_ORG"* ]]; then
+              echo "beta=[\"\\\"$COMMIT_ORG\\\"\"]" >> $GITHUB_OUTPUT
+            fi
+            
+            if [[ "$KUSTOMIZE_API_ORGS" == *"$COMMIT_ORG"* ]]; then
+              echo "api=[\"\\\"$COMMIT_ORG\\\"\"]" >> $GITHUB_OUTPUT
+            fi   
+          
           fi
+          
+          echo "$beta" >> $GITHUB_STEP_SUMMARY
+          echo "$api" >> $GITHUB_STEP_SUMMARY
