@@ -9,7 +9,6 @@ on:
         default: 'warning'
         type: choice
         options:
-          - aks-alpha-fint-2021-11-18
           - aks-beta-fint-2021-11-23
           - aks-api-fint-2022-02-08
       org:
@@ -29,9 +28,9 @@ jobs:
   deploy:
     needs: build-push
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
+    secrets: inherit
     with:
       cluster: ${{ inputs.cluster }}
       tags: ${{ needs.build-push.outputs.tags }}
       organizations: ${{ format('["{0}"]', inputs.org) }}
       deploy-every-branch: true
-    secrets: inherit
