@@ -44,20 +44,14 @@ jobs:
         run: |
           if [ -z $COMMIT_ORG ] ; then
             echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
-            echo "beta=$KUSTOMIZE_BETA_ORGS" >> $GITHUB_OUTPUT
-            echo "api=$KUSTOMIZE_API_ORGS" >> $GITHUB_OUTPUT
+            BETA=$KUSTOMIZE_BETA_ORGS
+            API=$KUSTOMIZE_API_ORGS
           else   
             echo "Using organization from commit message: $COMMIT_ORG" >> $GITHUB_STEP_SUMMARY
-            
-            if [[ "$KUSTOMIZE_BETA_ORGS" == *"$COMMIT_ORG"* ]]; then
-              echo "beta=[\"$COMMIT_ORG\"]" >> $GITHUB_OUTPUT
-            fi
-            
-            if [[ "$KUSTOMIZE_API_ORGS" == *"$COMMIT_ORG"* ]]; then
-              echo "api=[\"$COMMIT_ORG\"]" >> $GITHUB_OUTPUT
-            fi   
-          
-          fi
-          
-          echo "$beta" >> $GITHUB_STEP_SUMMARY
-          echo "$api" >> $GITHUB_STEP_SUMMARY
+            if [[ "$KUSTOMIZE_BETA_ORGS" == *"$COMMIT_ORG"* ]]; then BETA=["$COMMIT_ORG"]; fi
+            if [[ "$KUSTOMIZE_API_ORGS" == *"$COMMIT_ORG"* ]]; then API=["$COMMIT_ORG"]; fi
+          fi 
+          echo "beta=$BETA" >> $GITHUB_OUTPUT
+          echo "api=$API" >> $GITHUB_OUTPUT
+          echo "beta=$BETA" >> $GITHUB_STEP_SUMMARY
+          echo "api=$API" >> $GITHUB_STEP_SUMMARY

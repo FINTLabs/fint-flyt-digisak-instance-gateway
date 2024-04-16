@@ -8,28 +8,28 @@ on: push
 
 jobs:
 
-  organizations-to-deploy:
-    uses: ./.github/workflows/reusable-get-organizations.yaml
-
   build-push:
     uses: ./.github/workflows/reusable-build-push.yaml
 
+  organizations:
+    uses: ./.github/workflows/reusable-get-organizations.yaml
+
   deploy-beta:
-    needs: [ build-push, organizations-to-deploy ]
+    needs: [ build-push, organizations ]
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
       cluster: aks-beta-fint-2021-11-23
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ needs.organizations-to-deploy.outputs.beta }}
+      organizations: ${{ needs.organizations.outputs.beta }}
       deploy-every-branch: true
     secrets: inherit
 
   deploy-api:
-    needs: [ deploy-beta, organizations-to-deploy ]
+    needs: [ deploy-beta, organizations ]
     uses: ./.github/workflows/reusable-deploy-to-aks.yaml
     with:
       cluster: aks-api-fint-2022-02-08
       tags: ${{ needs.build-push.outputs.tags }}
-      organizations: ${{ needs.organizations-to-deploy.outputs.api }}
+      organizations: ${{ needs.organizations.outputs.api }}
       deploy-every-branch: false
     secrets: inherit
