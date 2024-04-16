@@ -33,7 +33,7 @@ jobs:
         id: org-from-commit
         run: |
           ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
-          echo "org=[\"$ORG\"]" >> $GITHUB_OUTPUT
+          echo "org=[\"\\\"$ORG\\\"\"]" >> $GITHUB_OUTPUT
 
       - name: Generate output
         id: generated-outputs
