@@ -42,8 +42,12 @@ jobs:
             echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
             echo "beta=${{ steps.organizations.outputs.beta }}" >> $GITHUB_OUTPUT
             echo "api=${{ steps.organizations.outputs.api }}" >> $GITHUB_OUTPUT
+            echo "beta=${{ steps.organizations.outputs.beta }}" >> $GITHUB_STEP_SUMMARY
+            echo "api=${{ steps.organizations.outputs.api }}" >> $GITHUB_STEP_SUMMARY
           else   
-            echo "Using organization from commit message: $ORG" >> $GITHUB_STEP_SUMMARY
+            echo "Using organization from commit message: ${{ steps.org-from-commit.outputs.org }}" >> $GITHUB_STEP_SUMMARY
             echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
             echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_OUTPUT
+            echo "beta=${{ contains(steps.organizations.outputs.beta, steps.org-from-commit.outputs.beta) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_STEP_SUMMARY
+            echo "api=${{ contains(steps.organizations.outputs.api, steps.org-from-commit.outputs.api) && steps.org-from-commit.outputs.org || '[]' }}" >> $GITHUB_STEP_SUMMARY
           fi
