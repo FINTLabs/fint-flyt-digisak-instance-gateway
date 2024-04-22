@@ -1,0 +1,57 @@
+name: Get organizations from kustomize file structure or commit message
+
+on:
+  workflow_call:
+    outputs:
+      beta:
+        value: ${{ jobs.get-organizations.outputs.beta }}
+      api:
+        value: ${{ jobs.get-organizations.outputs.api }}
+
+jobs:
+
+  get-organizations:
+    runs-on: ubuntu-latest
+    outputs:
+      beta: ${{ steps.generated-outputs.outputs.beta }}
+      api: ${{ steps.generated-outputs.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get organizations from Kustomize
+        id: organizations
+        run: |
+          echo "Organizations from Kustomize:" >> $GITHUB_STEP_SUMMARY
+          for ENV in beta api
+          do
+            ORGS=$(find kustomize/overlays -name $ENV -mindepth 2 -maxdepth 2 -type d | sed 's|kustomize/overlays/\(.*\)/.*|"\1"|' | paste -sd, -) 
+            echo "$ENV=[$ORGS]" >> $GITHUB_OUTPUT 
+            echo "* $ENV: [$ORGS]" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Get organization from commit message
+        id: org-from-commit
+        run: |
+          ORG=$(git log -1 --pretty=format:'%s' | grep -o 'org:[^ ]*' | cut -d':' -f2)
+          echo "org=$ORG" >> $GITHUB_OUTPUT
+
+      - name: Generate output
+        id: generated-outputs
+        env:
+          KUSTOMIZE_BETA_ORGS: ${{ steps.organizations.outputs.beta }}
+          KUSTOMIZE_API_ORGS: ${{ steps.organizations.outputs.api }}
+          COMMIT_ORG: ${{ steps.org-from-commit.outputs.org }}
+        run: |
+          if [ -z $COMMIT_ORG ] ; then
+            echo "Using organizations from Kustomize file structure (no organization in commit message)." >> $GITHUB_STEP_SUMMARY
+            BETA=$KUSTOMIZE_BETA_ORGS
+            API=$KUSTOMIZE_API_ORGS
+          else   
+            echo "Using organization from commit message: $COMMIT_ORG" >> $GITHUB_STEP_SUMMARY
+            if [[ "$KUSTOMIZE_BETA_ORGS" == *"$COMMIT_ORG"* ]]; then BETA=[\"$COMMIT_ORG\"]; fi
+            if [[ "$KUSTOMIZE_API_ORGS" == *"$COMMIT_ORG"* ]]; then API=[\"$COMMIT_ORG\"]; fi
+          fi 
+          echo "beta=$BETA" >> $GITHUB_OUTPUT
+          echo "api=$API" >> $GITHUB_OUTPUT
+          echo "* beta=$BETA" >> $GITHUB_STEP_SUMMARY
+          echo "* api=$API" >> $GITHUB_STEP_SUMMARY
